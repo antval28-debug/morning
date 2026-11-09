@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Rack Day">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}body{margin:0}</style>
+<title>Rack Day</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: one narrow phone column — today's banner, progress, then a stack of exercise cards with tappable set dots */
+:root {
+  --bg: #eef1f5;
+  --surface: #ffffff;
+  --line: #d7dde6;
+  --fg: #141c26;
+  --muted: #5d6878;
+  --accent: #2752e0;
+  --accent-ink: #ffffff;
+  --accent-soft: #e2e9fd;
+  --done: #1f8a4c;
+  --done-soft: #dcf2e4;
+  --display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f141b; --surface: #19212b; --line: #2a3441; --fg: #eaeef3; --muted: #9aa6b5;
+    --accent: #6f8fff; --accent-ink: #0f141b; --accent-soft: #1e2a4a; --done: #4cc77f; --done-soft: #16301f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f141b; --surface: #19212b; --line: #2a3441; --fg: #eaeef3; --muted: #9aa6b5;
+  --accent: #6f8fff; --accent-ink: #0f141b; --accent-soft: #1e2a4a; --done: #4cc77f; --done-soft: #16301f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+}
+.wrap { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+button { font: inherit; color: inherit; }
+button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.date { font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-size: 15px; }
+.switch { display: flex; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+.switch button { border: 0; background: transparent; padding: 6px 12px; border-radius: 999px; font-family: var(--display); font-weight: 700; font-size: 15px; letter-spacing: .04em; cursor: pointer; color: var(--muted); }
+.switch button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+
+h1 { font-family: var(--display); font-weight: 800; font-size: 52px; line-height: .95; margin: 0; text-transform: uppercase; text-wrap: balance; }
+.sub { color: var(--muted); margin: 6px 0 0; }
+
+.progress { display: flex; flex-direction: column; gap: 6px; }
+.bar { height: 10px; background: var(--line); border-radius: 999px; overflow: hidden; }
+.bar span { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 999px; transition: width .3s ease; }
+.bar.full span { background: var(--done); }
+.progress-label { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.warm { background: var(--accent-soft); border-radius: 14px; padding: 12px 14px; font-size: 14px; }
+.warm b { font-family: var(--display); text-transform: uppercase; letter-spacing: .06em; font-size: 14px; }
+
+.list { display: flex; flex-direction: column; gap: 10px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px; transition: background .2s, border-color .2s; }
+.card.done { background: var(--done-soft); border-color: transparent; }
+.card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.name { font-family: var(--display); font-weight: 700; font-size: 22px; line-height: 1.05; margin: 0; text-transform: uppercase; letter-spacing: .01em; }
+.card.done .name { color: var(--done); }
+.target { font-size: 13px; color: var(--muted); margin-top: 3px; font-variant-numeric: tabular-nums; }
+.check { flex: none; width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; color: transparent; font-weight: 700; }
+.card.done .check { background: var(--done); border-color: var(--done); color: var(--surface); }
+
+.sets { display: flex; gap: 8px; flex-wrap: wrap; }
+.set { min-width: 54px; height: 44px; padding: 0 10px; border-radius: 12px; border: 2px solid var(--line); background: transparent; cursor: pointer; font-family: var(--display); font-weight: 700; font-size: 17px; color: var(--muted); }
+.set[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.card.done .set[aria-pressed="true"] { background: var(--done); border-color: var(--done); }
+
+.how-btn { align-self: flex-start; border: 0; background: none; padding: 2px 0; color: var(--accent); font-weight: 600; font-size: 14px; cursor: pointer; }
+.card.done .how-btn { color: var(--done); }
+.how { margin: 0; font-size: 14px; color: var(--fg); }
+.howbox { display: flex; flex-direction: column; gap: 10px; }
+.gear { background: var(--bg); border-radius: 12px; padding: 10px 12px; font-size: 14px; display: flex; flex-direction: column; gap: 4px; }
+.label { font-family: var(--display); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; font-size: 13px; color: var(--muted); }
+
+.rest { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.rest p { margin: 0; }
+.cta { align-self: flex-start; border: 0; background: var(--accent); color: var(--accent-ink); padding: 10px 16px; border-radius: 12px; font-family: var(--display); font-weight: 700; font-size: 17px; letter-spacing: .03em; cursor: pointer; }
+
+.finish { text-align: center; font-family: var(--display); font-weight: 700; font-size: 24px; text-transform: uppercase; color: var(--done); padding: 6px 0; }
+.reset { align-self: center; border: 1px solid var(--line); background: transparent; color: var(--muted); padding: 8px 14px; border-radius: 10px; font-size: 13px; cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="top">
+    <div class="date" id="date"></div>
+    <div class="switch" role="group" aria-label="Choose workout">
+      <button id="btnA" type="button" data-day="A">DAY A</button>
+      <button id="btnB" type="button" data-day="B">DAY B</button>
+    </div>
+  </div>
+
+  <div id="main"></div>
+</div>
+
+<script>
+const PLAN = {
+  A: {
+    title: "Day A", focus: "Chest, biceps, abs",
+    items: [
+      { n: "Push-ups", g: "Just the floor. For the easier version, use a flat bench: the long, narrow padded seat about as high as your knees.", sets: 3, t: "3 sets · as many good reps as you can", how: "Hands a little wider than your shoulders, body straight from head to heels. Lower until your chest is about a fist above the floor, then push back up. Elbows angled slightly toward your body. Too hard? Do them on your knees or with hands on a bench." },
+      { n: "Dumbbell bench press", g: "Two dumbbells and a flat bench. A dumbbell is a short metal handle with a weight on each end, the kind you hold in one hand. The number on the end is how heavy it is. The bench is the long, narrow padded seat about knee height.", sets: 3, t: "3 sets · 10–12 reps", how: "Lie on the bench, feet flat, a dumbbell in each hand above your chest. Lower them slowly until they're beside your chest, then press straight back up. Keep your back and butt on the bench." },
+      { n: "Cable chest fly", g: "The two cable towers on the left and right sides of your rack. Each one has a tall stack of black weight plates with a cable coming out of it. The cable runs over a pulley, a small metal wheel that slides up and down a post. Pull the pop pin to slide each pulley to shoulder height. Choose your weight by sliding the pin into a lower plate in the stack. Clip a D-handle onto each cable with its clip. A D-handle is a single grip shaped like the letter D; there's one hanging on the right side of your rack in the picture. Ask your dad to show you the first time.", sets: 2, t: "2 sets · 12–15 reps", how: "Set both pulleys at shoulder height and grab a handle in each hand. Step forward, one foot in front. With a slight bend in your elbows, bring your hands together in front of your chest like hugging a tree. Slowly open back up until you feel a stretch." },
+      { n: "Dumbbell curls", g: "Two dumbbells, one in each hand.", sets: 3, t: "3 sets · 10–12 reps", how: "Stand tall, palms facing forward. Keep your elbows pinned at your sides and curl the weights up to your shoulders. Squeeze, then lower slowly. If you have to swing, it's too heavy." },
+      { n: "Cable or hammer curls", g: "Cable curl: one of the side cable towers, with the pulley slid all the way to the bottom. Clip on a short straight bar (a metal bar about as wide as your shoulders) or a D-handle. Hammer curl: just two dumbbells.", sets: 2, t: "2 sets · 12 reps", how: "Cable: attach a bar to the low pulley and curl it up with elbows at your sides. Hammer: hold dumbbells with palms facing each other and curl them up the same way." },
+      { n: "Hanging knee raises", g: "The pull-up bar: the straight metal bar that goes across the top front of the rack. If you can't reach it, stand on a sturdy box or bench to grab it, then step off.", sets: 3, t: "3 sets · 8–12 reps", how: "Hang from the pull-up bar with straight arms. Without swinging, pull your knees up toward your chest using your abs, then lower slowly. Too hard? Do the same move lying on the floor." },
+      { n: "Plank", g: "Just the floor. A yoga or exercise mat makes it easier on your elbows.", sets: 3, t: "3 sets · 20–40 seconds", how: "Forearms and toes on the floor, elbows under shoulders. Keep a straight line: no sagging hips, no butt in the air. Squeeze your abs and breathe. Add 5 seconds when it gets easy." }
+    ]
+  },
+  B: {
+    title: "Day B", focus: "Legs, back, abs",
+    items: [
+      { n: "Goblet squat", g: "One dumbbell. Hold it standing up on one end, cupping the top weight with both hands like holding a goblet (a big cup).", sets: 3, t: "3 sets · 10–12 reps", how: "Hold one dumbbell against your chest. Feet shoulder-width, toes turned out a little. Sit your hips back and down like into a chair, chest up, heels down. Go as low as you can with a flat back, then stand up." },
+      { n: "Dumbbell lunges", g: "Two dumbbells, or none at all while you learn the move.", sets: 3, t: "3 sets · 8 each leg", how: "Dumbbell in each hand. Take a big step forward and lower your back knee toward the floor until both knees bend about 90°. Front knee stays over your foot. Push back and switch legs." },
+      { n: "Romanian deadlift", g: "Two dumbbells.", sets: 3, t: "3 sets · 10 reps", how: "Dumbbells in front of your thighs, knees slightly bent. Keep your back flat and push your hips back, sliding the weights down your legs until you feel a stretch in the back of your thighs. Squeeze your glutes to stand up. Never round your back." },
+      { n: "Lat pulldown", g: "The lat bar: the long bar that hangs on a cable from the top middle of the rack. Its ends usually bend down a little. It's connected to a weight stack, where you choose the weight by moving the pin. Kneel on the floor under it, or put a bench under it and sit facing the rack. If your dad uses a different bar on that cable, it'll still work.", sets: 3, t: "3 sets · 10–12 reps", how: "Long bar on the top pulley. Grab it a little wider than your shoulders and sit or kneel under it. Lean back slightly and pull the bar to your upper chest, elbows toward your ribs. Let it rise slowly." },
+      { n: "Seated cable row", g: "A low pulley: a pulley at the very bottom, either at the bottom middle of the rack (often with a flat footplate to brace your feet) or one of the side pulleys slid all the way down. Clip on a V-handle, a short metal grip shaped like a triangle with two handles close together. A D-handle works too. Sit on the floor or a low bench facing the pulley.", sets: 3, t: "3 sets · 10–12 reps", how: "Handle on the low pulley, sit facing it with knees slightly bent. Sit tall and pull the handle to your belly, squeezing your shoulder blades together. Slowly straighten your arms without rounding your back." },
+      { n: "Calf raises", g: "Something sturdy about 2 to 4 inches high to stand on: a stair, a thick weight plate (the big flat round weights with a hole in the middle) lying flat, or a step block. Hold the rack for balance.", sets: 2, t: "2 sets · 15 reps", how: "Balls of your feet on a step or plate, heels hanging off, hold the rack for balance. Rise up as high as you can, pause, then lower your heels below the step." },
+      { n: "Dead bugs", g: "Just the floor. A mat is more comfortable.", sets: 3, t: "3 sets · 10 each side", how: "Lie on your back, arms up, knees bent 90° above your hips. Press your lower back into the floor. Lower your right arm and left leg at the same time, bring them back, then switch." },
+      { n: "Side plank", g: "Just the floor. A mat is more comfortable on your elbow.", sets: 2, t: "2 sets · 20 sec each side", how: "On your side, propped on one forearm, elbow under shoulder. Lift your hips into a straight line. Hold, then switch sides. Too hard? Keep your bottom knee down." }
+    ]
+  }
+};
+// Mon/Thu = A, Tue/Fri = B, others rest
+const SCHEDULE = { 1: "A", 2: "B", 4: "A", 5: "B" };
+const DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+const now = new Date();
+const todayKey = now.getFullYear() + "-" + (now.getMonth()+1) + "-" + now.getDate();
+const scheduled = SCHEDULE[now.getDay()] || null;
+let view = scheduled;      // null = rest screen
+let open = {};             // which how-to panels are open
+
+function load() {
+  try { const s = JSON.parse(localStorage.getItem("rack-" + todayKey) || "{}"); return s && typeof s === "object" ? s : {}; }
+  catch (e) { return {}; }
+}
+function save() { try { localStorage.setItem("rack-" + todayKey, JSON.stringify(state)); } catch (e) {} }
+let state = load();        // { "A-0": 2, ... } sets done per exercise
+
+document.getElementById("date").textContent = now.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+
+function nextWorkout() {
+  for (let i = 1; i <= 7; i++) {
+    const d = (now.getDay() + i) % 7;
+    if (SCHEDULE[d]) return { day: DAYS[d], plan: SCHEDULE[d] };
+  }
+}
+
+function esc(s) { return s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+function render() {
+  document.getElementById("btnA").setAttribute("aria-pressed", view === "A");
+  document.getElementById("btnB").setAttribute("aria-pressed", view === "B");
+  const main = document.getElementById("main");
+
+  if (!view) {
+    const nx = nextWorkout();
+    main.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div><h1>Rest day</h1><p class="sub">Muscles grow while you rest. Go play outside or take it easy.</p></div>
+        <div class="rest">
+          <p><b>Next up:</b> ${nx.day}, ${PLAN[nx.plan].title} (${PLAN[nx.plan].focus.toLowerCase()})</p>
+          <button class="cta" id="peek" type="button">See ${PLAN[nx.plan].title}</button>
+        </div>
+      </div>`;
+    document.getElementById("peek").onclick = () => { view = nx.plan; render(); };
+    return;
+  }
+
+  const p = PLAN[view];
+  const totalSets = p.items.reduce((a, it) => a + it.sets, 0);
+  const doneSets = p.items.reduce((a, it, i) => a + Math.min(state[view + "-" + i] || 0, it.sets), 0);
+  const doneEx = p.items.filter((it, i) => (state[view + "-" + i] || 0) >= it.sets).length;
+  const pct = Math.round(doneSets / totalSets * 100);
+  const isToday = view === scheduled;
+
+  main.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div>
+        <h1>${p.title}</h1>
+        <p class="sub">${p.focus}${isToday ? "" : " · not on today's schedule"}</p>
+      </div>
+      <div class="progress">
+        <div class="bar ${pct === 100 ? "full" : ""}"><span style="width:${pct}%"></span></div>
+        <div class="progress-label"><span>${doneEx} of ${p.items.length} exercises</span><span>${doneSets}/${totalSets} sets</span></div>
+      </div>
+      <div class="warm"><b>Warm up first</b> · 30 jumping jacks, 10 arm circles each way, 10 bodyweight squats, then one light set.</div>
+      <div class="list">
+        ${p.items.map((it, i) => {
+          const k = view + "-" + i, n = state[k] || 0, done = n >= it.sets;
+          return `
+          <div class="card ${done ? "done" : ""}">
+            <div class="card-head">
+              <div><h2 class="name">${esc(it.n)}</h2><div class="target">${esc(it.t)}</div></div>
+              <div class="check" aria-hidden="true">✓</div>
+            </div>
+            <div class="sets" role="group" aria-label="${esc(it.n)} sets">
+              ${Array.from({ length: it.sets }, (_, s) => `<button type="button" class="set" id="set-${k}-${s}" data-k="${k}" data-s="${s}" aria-pressed="${s < n}" aria-label="Set ${s+1}">SET ${s+1}</button>`).join("")}
+            </div>
+            <button type="button" class="how-btn" data-how="${k}" aria-expanded="${!!open[k]}">${open[k] ? "Hide how-to" : "How to do it"}</button>
+            ${open[k] ? `<div class="howbox"><div class="gear"><span class="label">What you need</span><span>${esc(it.g)}</span></div><div class="gear" style="background:transparent;padding:0"><span class="label">How to do it</span><p class="how">${esc(it.how)}</p></div></div>` : ""}
+          </div>`;
+        }).join("")}
+      </div>
+      ${pct === 100 ? `<div class="finish">Workout done. Nice work!</div>` : ""}
+      <button class="reset" id="reset" type="button">Clear today's checkmarks</button>
+    </div>`;
+
+  main.querySelectorAll(".set").forEach(b => b.onclick = () => {
+    const k = b.dataset.k, s = +b.dataset.s, n = state[k] || 0;
+    state[k] = (s < n) ? s : s + 1;   // tap a filled set to undo back to it
+    save(); render();
+  });
+  main.querySelectorAll(".how-btn").forEach(b => b.onclick = () => { open[b.dataset.how] = !open[b.dataset.how]; render(); });
+  document.getElementById("reset").onclick = () => {
+    Object.keys(state).forEach(k => { if (k.startsWith(view + "-")) delete state[k]; });
+    save(); render();
+  };
+}
+
+document.querySelectorAll(".switch button").forEach(b => b.onclick = () => { view = b.dataset.day; render(); });
+render();
+</script>
+</body>
+</html>
